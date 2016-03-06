@@ -155,3 +155,86 @@ predictions<-as.matrix(cbind(predict1, predict2, predict3))
 observed<-anes$thermObama[anes$test==1]
 length(observed)
 dim(predictions)
+
+
+
+############## FIT STATISTICS - FUNCTIONS ####################
+
+
+## funciton RMSE
+## @param preds, matrix of predicted values (default = 'predictions' matrix created above)
+## @param obs, matrix of observed values (default = 'observed' vector created above)
+## @param model, value 1:3 denoting which model to assess fitness of (default = 1)
+## returns fitness of model, calcultated by RMSE
+
+RMSE <- function (preds=predictions, obs=observed, model=1) {
+  errors<-abs(preds[,model]-obs)
+  return(sqrt(mean(errors^2, na.rm=T)))
+}
+
+
+## funciton MAD
+## @param preds, matrix of predicted values (default = 'predictions' matrix created above)
+## @param obs, matrix of observed values (default = 'observed' vector created above)
+## @param model, value 1:3 denoting which model to assess fitness of (default = 1)
+## returns fitness of model, calcultated by MAD
+
+MAD <- function (preds=predictions, obs=observed, model=1) {
+  errors<-abs(preds[,model]-obs)
+  return(median(errors, na.rm=TRUE))
+}
+
+
+## funciton RMSLE
+## @param preds, matrix of predicted values (default = 'predictions' matrix created above)
+## @param obs, matrix of observed values (default = 'observed' vector created above)
+## @param model, value 1:3 denoting which model to assess fitness of (default = 1)
+## returns fitness of model, calcultated by RMSLE
+
+RMSLE <- function (preds=predictions, obs=observed, model=1) {
+  hold<-log(preds[,model]+1)-log(obs+1)
+  return(sqrt(mean(hold^2, na.rm=T)))
+}
+
+
+## funciton MAPE
+## @param preds, matrix of predicted values (default = 'predictions' matrix created above)
+## @param obs, matrix of observed values (default = 'observed' vector created above)
+## @param model, value 1:3 denoting which model to assess fitness of (default = 1)
+## returns fitness of model, calcultated by MAPE
+
+MAPE <- function (preds=predictions, obs=observed, model=1) {
+  errors<-abs(preds[,model]-obs)
+  percentErrors<-errors/obs*100
+  return(mean(percentErrors[percentErrors!=Inf], na.rm=TRUE))
+}
+MAPE()
+#### WHAT DO WHEN OBS = 0? 
+
+## funciton MEAPE
+## @param preds, matrix of predicted values (default = 'predictions' matrix created above)
+## @param obs, matrix of observed values (default = 'observed' vector created above)
+## @param model, value 1:3 denoting which model to assess fitness of (default = 1)
+## returns fitness of model, calcultated by MEAPE
+
+MEAPE <- function (preds=predictions, obs=observed, model=1) {
+  errors<-abs(preds[,model]-obs)
+  percentErrors<-errors/obs *100
+  return(median(percentErrors, na.rm=TRUE))
+}
+### WHAT ABOUT INFINITY VALUES HERE? (WHEN OBS = 0)? 
+### not a problem cuz its median but still......
+
+
+############ CALCULATE AND STORE FIT STATISTICS ##############
+
+statRMSE<-sapply(1:3, function(x) RMSE(model=x))
+statMAD<-sapply(1:3, function(x) MAD(model=x))
+statRMSLE<-sapply(1:3, function(x) RMSLE(model=x))
+statMAPE<-sapply(1:3, function(x) MAPE(model=x))
+statMEAPE<-sapply(1:3, function(x) MEAPE(model=x))
+
+fitStats<-as.matrix(t(rbind(statRMSE, statMAD, statRMSLE, statMAPE, statMEAPE)))
+
+fitStats
+
