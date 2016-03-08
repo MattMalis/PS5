@@ -45,7 +45,6 @@ anes[,-c(1,2)]<-apply(anes[,-c(1,2)], 2, function(x){
 })
 str(anes)
 
-## recoding: all "Don't Know" or "Refused" coded as NA
 
 ## male=1, female=0
 anes$male<-ifelse(anes$V5=='1. Male', 1, 0)
@@ -140,6 +139,7 @@ summary(model3)
 
 ########## PREDICTED DATA #################
 
+
 predict1<-array(as.numeric(predict(model1, anes[anes$test==1,])))
 summary(predict1)
 summary(anes$thermObama)
@@ -158,7 +158,7 @@ dim(predictions)
 
 
 
-############## FIT STATISTICS - FUNCTIONS ####################
+############## FIT STATISTICS - INDIVIDUAL FUNCTIONS ####################
 
 
 ## funciton RMSE
@@ -208,7 +208,7 @@ MAPE <- function (preds=predictions, obs=observed, model=1) {
   percentErrors<-errors/obs*100
   return(mean(percentErrors[percentErrors!=Inf], na.rm=TRUE))
 }
-MAPE()
+
 #### WHAT DO WHEN OBS = 0? 
 
 ## funciton MEAPE
@@ -226,15 +226,59 @@ MEAPE <- function (preds=predictions, obs=observed, model=1) {
 ### not a problem cuz its median but still......
 
 
-############ CALCULATE AND STORE FIT STATISTICS ##############
 
-statRMSE<-sapply(1:3, function(x) RMSE(model=x))
-statMAD<-sapply(1:3, function(x) MAD(model=x))
-statRMSLE<-sapply(1:3, function(x) RMSLE(model=x))
-statMAPE<-sapply(1:3, function(x) MAPE(model=x))
-statMEAPE<-sapply(1:3, function(x) MEAPE(model=x))
 
-fitStats<-as.matrix(t(rbind(statRMSE, statMAD, statRMSLE, statMAPE, statMEAPE)))
 
-fitStats
+############ FIT STATISTICS - MASTER FUNCTION #############
+
+
+
+## function fitStatistics
+## @param preds, matrix of predicted values (default = 'predictions' matrix created above)
+## @param obs, matrix of observed values (default = 'observed' vector created above)
+## @params findRMSE, findMAD, findRMSLE, findMAPE, findMEAPE: boolean of whether to calculate these values
+##      (default to TRUE for all)
+## returns matrix of 
+
+
+fitStatistics<-function(preds=predictions, obs=observed, 
+                        findRMSE=T, findMAD=T, findRMSLE=T, findMAPE=T, findMEAPE=T){
+  fitStatValues<-matrix(nrow=3)
+  statNames<-(NULL)
+  if (findRMSE){
+    statRMSE<-sapply(1:3, function(x) RMSE(model=x))
+    fitStatValues<-cbind(fitStatValues, (statRMSE))
+    statNames<-c(statNames, "RMSE")
+  }
+  if (findMAD){
+    statMAD<-sapply(1:3, function(x) MAD(model=x))
+    fitStatValues<-cbind(fitStatValues, (statMAD))
+    statNames<-c(statNames, "MAD")
+  }
+  if (findRMSLE){
+    statRMSLE<-sapply(1:3, function(x) RMSLE(model=x))
+    fitStatValues<-cbind(fitStatValues, (statRMSLE))
+    statNames<-c(statNames, "RMSLE")
+  }
+  if (findMAPE){
+    statMAPE<-sapply(1:3, function(x) MAPE(model=x))
+    fitStatValues<-cbind(fitStatValues, (statMAPE))
+    statNames<-c(statNames, "MAPE")
+  }
+  if (findMEAPE){
+    statMEAPE<-sapply(1:3, function(x) MEAPE(model=x))
+    fitStatValues<-cbind(fitStatValues, statMEAPE)
+    statNames<-c(statNames, "MEAPE")
+  }
+  fitStatValues<-fitStatValues[,-1]
+  colnames(fitStatValues)<-statNames
+  rownames(fitStatValues)<-c("Model1", "Model2", "Model3")
+  return(fitStatValues)
+}
+
+## RUNNING FUNCTION ON THE THREE MODELS
+
+fitStatistics()
+
+
 
