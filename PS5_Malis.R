@@ -118,7 +118,6 @@ table(anes$test)
 
 
 
-
 ########## STATISTICAL MODELS ###########
 
 
@@ -205,11 +204,10 @@ RMSLE <- function (preds=predictions, obs=observed, model=1) {
 
 MAPE <- function (preds=predictions, obs=observed, model=1) {
   errors<-abs(preds[,model]-obs)
-  percentErrors<-errors/obs*100
-  return(mean(percentErrors[percentErrors!=Inf], na.rm=TRUE))
+  percentErrors<-errors/obs*100  ## some values in obs are 0...so errors/obs would be Inf in those cases
+  return(mean(percentErrors[percentErrors!=Inf], na.rm=TRUE)) ## removing those values from the MAPE calculation
 }
 
-#### WHAT DO WHEN OBS = 0? 
 
 ## funciton MEAPE
 ## @param preds, matrix of predicted values (default = 'predictions' matrix created above)
@@ -219,12 +217,9 @@ MAPE <- function (preds=predictions, obs=observed, model=1) {
 
 MEAPE <- function (preds=predictions, obs=observed, model=1) {
   errors<-abs(preds[,model]-obs)
-  percentErrors<-errors/obs *100
-  return(median(percentErrors, na.rm=TRUE))
+  percentErrors<-errors/obs *100  ## some values in obs are 0...so errors/obs would be Inf in those cases
+  return(median(percentErrors[percentErrors!=Inf], na.rm=TRUE))  ## removing those values from the MAPE calculation
 }
-### WHAT ABOUT INFINITY VALUES HERE? (WHEN OBS = 0)? 
-### not a problem cuz its median but still......
-
 
 
 
@@ -236,9 +231,9 @@ MEAPE <- function (preds=predictions, obs=observed, model=1) {
 ## function fitStatistics
 ## @param preds, matrix of predicted values (default = 'predictions' matrix created above)
 ## @param obs, matrix of observed values (default = 'observed' vector created above)
-## @params findRMSE, findMAD, findRMSLE, findMAPE, findMEAPE: boolean of whether to calculate these values
+## @params findRMSE, findMAD, findRMSLE, findMAPE, findMEAPE: boolean of whether to calculate each of these values
 ##      (default to TRUE for all)
-## returns matrix of 
+## returns matrix of fit statistics, calculated for the predicted values from the three models
 
 
 fitStatistics<-function(preds=predictions, obs=observed, 
@@ -246,27 +241,27 @@ fitStatistics<-function(preds=predictions, obs=observed,
   fitStatValues<-matrix(nrow=3)
   statNames<-(NULL)
   if (findRMSE){
-    statRMSE<-sapply(1:3, function(x) RMSE(model=x))
+    statRMSE<-sapply(1:3, function(x) RMSE(preds=preds, obs=obs, model=x))
     fitStatValues<-cbind(fitStatValues, (statRMSE))
     statNames<-c(statNames, "RMSE")
   }
   if (findMAD){
-    statMAD<-sapply(1:3, function(x) MAD(model=x))
+    statMAD<-sapply(1:3, function(x) MAD(preds=preds, obs=obs, model=x))
     fitStatValues<-cbind(fitStatValues, (statMAD))
     statNames<-c(statNames, "MAD")
   }
   if (findRMSLE){
-    statRMSLE<-sapply(1:3, function(x) RMSLE(model=x))
+    statRMSLE<-sapply(1:3, function(x) RMSLE(preds=preds, obs=obs, model=x))
     fitStatValues<-cbind(fitStatValues, (statRMSLE))
     statNames<-c(statNames, "RMSLE")
   }
   if (findMAPE){
-    statMAPE<-sapply(1:3, function(x) MAPE(model=x))
+    statMAPE<-sapply(1:3, function(x) MAPE(preds=preds, obs=obs, model=x))
     fitStatValues<-cbind(fitStatValues, (statMAPE))
     statNames<-c(statNames, "MAPE")
   }
   if (findMEAPE){
-    statMEAPE<-sapply(1:3, function(x) MEAPE(model=x))
+    statMEAPE<-sapply(1:3, function(x) MEAPE(preds=preds, obs=obs, model=x))
     fitStatValues<-cbind(fitStatValues, statMEAPE)
     statNames<-c(statNames, "MEAPE")
   }
@@ -276,9 +271,11 @@ fitStatistics<-function(preds=predictions, obs=observed,
   return(fitStatValues)
 }
 
-## RUNNING FUNCTION ON THE THREE MODELS
+## RUNNING FUNCTION ON THE PREDICTED VALUES FROM THE THREE MODELS
 
 fitStatistics()
 
-
-
+## running on a fake data set... making sure function actually responds to different inputs
+fakePreds<-matrix(ncol=3, seq(1:3000))
+fakeObs<-matrix(ncol=1, seq(1000:1))
+fitStatistics(pred=fakePreds, obs=fakeObs, findRMSLE = F)
